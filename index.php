@@ -33,15 +33,21 @@
 
 	<header class="container">
 		<div class="row">
-			<div class="col-md-4">
+			<div class="col-md-6">
 				<h1>BILL GENERATOR</h1>
 			</div>
-			<div class="col-md-4" style="margin-top: 15px;">
+			
+			<div class="col-md-2" style="margin-top: 15px;">
+				<div class="form-group">
+					<input value="<?php echo isset($_SESSION['gstnumber']) ? $_SESSION['gstnumber'] : '' ?>" type="text" class="form-control gstnumber" id="gstnumber" placeholder="GST Number">
+				</div>
+			</div>
+			<div class="col-md-2" style="margin-top: 15px;">
 				<div class="form-group">
 					<input value="<?php echo isset($_SESSION['invoiceNumber']) ? $_SESSION['invoiceNumber'] : '' ?>" type="text" class="form-control invoiceNumber" id="invoiceNumber" placeholder="Invoice Number">
 				</div>
 			</div>
-			<div class="col-md-4" style="margin-top: 15px;">
+			<div class="col-md-2" style="margin-top: 15px;">
 				<div class="form-group">
 					<input value="<?php echo isset($_SESSION['billingDate']) ? $_SESSION['billingDate'] : '' ?>" type="date" class="form-control billingDate" id="billingDate">
 				</div>
@@ -55,6 +61,21 @@
 			<div class="col-md-6">
 				<div class="row well">
 					<h2>Your Details</h2><hr style="border-top: 1px solid #8c8b8b;">
+
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="organisation">Organisation:</label>
+								<input value="<?php echo isset($_SESSION['organisation']) ? $_SESSION['organisation'] : '' ?>" type="text" class="form-control organisation" id="organisation" placeholder="Organisation">
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="website">Website:</label>
+								<input value="<?php echo isset($_SESSION['website']) ? $_SESSION['website'] : '' ?>" type="text" class="form-control website" id="website" placeholder="Website">
+							</div>
+						</div>
+					</div>
 
 					<div class="row">
 						<div class="col-md-6">
@@ -119,13 +140,13 @@
 					<h2>Client Details</h2><hr style="border-top: 1px solid #8c8b8b;">
 
 					<div class="row">
-						<div class="col-md-6">
+						<div class="col-md-12">
 							<div class="form-group">
 								<label for="companyName">Company Name:</label>
 								<input value="<?php echo isset($_SESSION['companyName']) ? $_SESSION['companyName'] : '' ?>" type="text" class="form-control companyName" id="companyName" placeholder="Company Name">
 							</div>
 						</div>
-						<div class="col-md-6">
+						<div class="col-md-12">
 							<div class="form-group">
 								<label for="clientName">Client Full Name:</label>
 								<input value="<?php echo isset($_SESSION['clientName']) ? $_SESSION['clientName'] : '' ?>" type="text" class="form-control clientName" id="clientName" placeholder="Client Full Name">
@@ -233,6 +254,34 @@
 
 		</div>
 
+		<div class="row">
+			<div class="col-md-6 well">
+				<h2>Discount</h2><hr style="border-top: 1px solid #8c8b8b;">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<input value="<?php echo isset($_SESSION['discountAmount']) ? $_SESSION['discountAmount'] : '' ?>" type="text" class="form-control discountAmount" placeholder="Amount">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6 well">
+				<h2>Tax <small class="pull-right">Final: &#8377;<span class="final">0.00</span></small></h2><hr style="border-top: 1px solid #8c8b8b;">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="form-group">
+							<input value="<?php echo isset($_SESSION['taxName']) ? $_SESSION['taxName'] : '' ?>" type="text" class="form-control taxName" placeholder="Tax">
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="form-group">
+							<input value="<?php echo isset($_SESSION['taxPercent']) ? $_SESSION['taxPercent'] : '' ?>" type="text" class="form-control taxPercent" placeholder="Percentage">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="row well">
 			<div class="col-md-12">
 				<button class="btn btn-lg btn-primary btn-block generate"><i class="fa fa-print"></i> GENERATE INVOICE</button>
@@ -272,12 +321,27 @@
 
 			function updateTotal() {
 				var sumTotal = 0
+				var sumFinal = 0
 				$('.item').each( function(index) {
 					sumTotal = parseInt(sumTotal) + parseInt($( this ).find('.linetotal').val());
 				});
+
+				var discount = $('.discountAmount').val();
+				console.log('Discounted anount' + discount);
+				if(!isNaN(discount)){
+					sumFinal = sumTotal - discount;
+				}
+
+				console.log(sumFinal);
+
+				var tax = $('.taxPercent').val();
+				if(!isNaN(tax)) {
+					sumFinal = sumFinal + ((sumFinal*tax)/100);
+				}
 				
 				if(!isNaN(sumTotal)) {
 					$('.total').html(numberToCurrency(sumTotal));
+					$('.final').html(numberToCurrency(sumFinal));
 				}
 			}
 
@@ -364,6 +428,14 @@
 				updateTotal();
 			});
 
+			$('.discountAmount').on('keyup focus keyup click focusout', function(){
+					updateTotal();
+			});
+
+			$('.taxPercent').on('keyup focus keyup click focusout', function(){
+					updateTotal();
+			});
+
 			$('.generate').click(function(){
 
 				var arrArticles = [];
@@ -380,9 +452,13 @@
 				});
 
 
+
 				var json = {
+							"gstnumber"		: $('.gstnumber').val(),//
 							"invoiceNumber"	: $('.invoiceNumber').val(),
 							"billingDate" 	: $('.billingDate').val(),
+							"organisation" 	: $('.organisation').val(),//
+							"website" 		: $('.website').val(),//
 							"firstName" 	: $('.firstName').val(),
 							"lastName" 		: $('.lastName').val(),
 							"bankName" 		: $('.bankName').val(),
@@ -397,6 +473,9 @@
 							"clientPhone" 	: $('.clientPhone').val(),
 							"clientEmail" 	: $('.clientEmail').val(),
 							"arrArticles"	: arrArticles,
+							"discountAmount": $('.discountAmount').val(),//
+							"taxName"		: $('.taxName').val(),//
+							"taxPercent"	: $('.taxPercent').val(),//
 						};
 
 				console.log(json);

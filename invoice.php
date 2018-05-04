@@ -13,11 +13,29 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $billingAmount = 0;
+$discount = 0;
+$taxAmount = 0;
+$finalAmount = 0;
 
 if(isset($_SESSION['arrArticles'][0]['lineTotal'])) {
-
 	for($i=0; $i<count($_SESSION['arrArticles']); $i++) {
 		$billingAmount = $billingAmount + $_SESSION['arrArticles'][$i]['lineTotal'];
+	}
+	if(isset($_SESSION['discountAmount'])) {
+		if(!empty($_SESSION['discountAmount'])) {
+			$discount = $_SESSION['discountAmount'];
+			$finalAmount = $billingAmount - $discount;
+		} else {
+			$finalAmount = $billingAmount;
+		}
+	} else {
+		$finalAmount = $billingAmount;
+	}
+	if(isset($_SESSION['taxPercent'])) {
+		if(!empty($_SESSION['taxPercent'])) {
+			$taxAmount = ($finalAmount*$_SESSION['taxPercent'])/100;
+			$finalAmount = $finalAmount + $taxAmount;
+		}
 	}
 }
 
@@ -150,8 +168,9 @@ function dateFormatter($date) {
 			margin: 0;
 		}
 		img {
-			width:auto;
-			height: 150px;
+			height:auto;
+			/*height: 150px;*/
+			width:300px;
 			float: right;
 		}
 		.fullWidth {
@@ -182,7 +201,7 @@ function dateFormatter($date) {
 		 		position:absolute;
 		 		bottom:0;
 		 		width:100%;
-		 		height:240px
+		 		height:280px
 		 	}
 		 	.fullWidth {
 		 		width: 100%
@@ -200,13 +219,36 @@ function dateFormatter($date) {
 <table class="allHalfTd">
 	<tr class="fullWidth">
 		<td>
-			<b><span class="yourName"><?php echo isset($_SESSION['firstName']) ? strtoupper($_SESSION['firstName'] . ' ' . $_SESSION['lastName']) : '' ?></span></b><br><br>
+			<?php
+				if(isset($_SESSION['organisation'])) {
+					if(!empty($_SESSION['organisation'])) {
+						echo '<span class="organisation"><b>'.strtoupper($_SESSION['organisation']).'</b></span>';
+					} else {
+						echo '<b><span class="yourName">' . strtoupper($_SESSION['firstName'] . ' ' . $_SESSION['lastName']) . '</span></b>';	
+					}
+				}
+			?>
+			<br><br>
 			Bank: <span class="yourBank"><?php echo isset($_SESSION['bankName']) ? strtoupper($_SESSION['bankName']) : '' ?></span><br>
 			A/C No.: <span span="yourAccountNumber"><?php echo isset($_SESSION['accountNumber']) ? strtoupper($_SESSION['accountNumber']) : '' ?></span><br>
 			IFSC Code: <span span="ifscCode"><?php echo isset($_SESSION['ifscCode']) ? strtoupper($_SESSION['ifscCode']) : '' ?></span><br>
 			Email- <span span="yourEmail"><?php echo isset($_SESSION['yourEmail']) ? $_SESSION['yourEmail'] : '' ?></span><br>
 			Contact No.: <span class="yourPhone"><?php echo isset($_SESSION['yourPhone']) ? $_SESSION['yourPhone'] : '' ?></span><br>
 			Pan Card No: <span class="yourPanCard"><?php echo isset($_SESSION['yourPanCard']) ? strtoupper($_SESSION['yourPanCard']) : '' ?></span>
+			<?php
+				if(isset($_SESSION['gstnumber'])) {
+					if(!empty($_SESSION['gstnumber'])) {
+						echo '<br>GST No: <span class="gstNumber">'. strtoupper($_SESSION['gstnumber']) . '</span>';
+					}
+				}
+				if(isset($_SESSION['website'])) {
+					if(!empty($_SESSION['website'])) {
+						echo '<br>'.$_SESSION['website'];
+					}
+				}
+			?>
+
+			
 		</td>
 		<td>
 			<img class="logo" src="assets/img/logo.jpg">
@@ -231,7 +273,7 @@ function dateFormatter($date) {
 			<table>
 				<tr class="fullWidth">
 					<td class="grayscale fullWidth tenPadding alignTop">
-						<b>Balance Due (INR) <span class="pull-right totalAmount">&#8377; <?php echo numberToCurrency($billingAmount); ?></span></b>
+						<b>Balance Due (INR) <span class="pull-right totalAmount">&#8377; <?php echo numberToCurrency($finalAmount); ?></span></b>
 					</td>
 				</tr>
 			</table>
@@ -276,13 +318,32 @@ function dateFormatter($date) {
 					<td><b>Total</b></td>
 					<td class="align-right sumTotal"><b><?php echo numberToCurrency($billingAmount); ?></b></td>
 				</tr>
+
+				<?php  
+
+					$discountAmount = isset($_SESSION['discountAmount']) ? $_SESSION['discountAmount'] : '';
+					if(!empty($discountAmount)) {
+						echo '<tr><td><b>Discount</b></td>';
+						echo '<td class="align-right discountAmount">'.numberToCurrency($discountAmount).'</td></tr>';
+						echo '<tr><td><b>Total After Discount</b></td>';
+						echo '<td class="align-right discountAmount">'.numberToCurrency($billingAmount - $discountAmount).'</td></tr>';
+					} 
+
+					$taxPercent = isset($_SESSION['taxPercent']) ? $_SESSION['taxPercent'] : '';
+					if(!empty($taxPercent)) {
+						echo '<tr><td><b>TAX ('.$_SESSION['taxName'].' '. $_SESSION['taxPercent'] .'%)</b></td>';
+						$taxAmount = ($billingAmount*$taxPercent)/100;
+						echo '<td class="align-right discountAmount">'.numberToCurrency($taxAmount).'</td></tr>';
+					}
+
+				?>
 				<tr">
 					<td>Amount Payed</td>
 					<td class="align-right amountPayed">0.00</td>
 				</tr>
 				<tr class="grayscale tenPadding">
 					<td class="tenPadding"><b>Balance due (INR)</b></td>
-					<td class="tableRightValue totalAmount"><b>&#8377; <?php echo numberToCurrency($billingAmount); ?></b></td>
+					<td class="tableRightValue totalAmount"><b>&#8377; <?php echo numberToCurrency($finalAmount); ?></b></td>
 				</tr>
 			</table>
 
@@ -301,13 +362,34 @@ function dateFormatter($date) {
 	<table class="allHalfTd">
 		<tr class="fullWidth">
 			<td>
-				<b><span class="yourName"><?php echo isset($_SESSION['firstName']) ? strtoupper($_SESSION['firstName'] . ' ' . $_SESSION['lastName']) : '' ?></span></b><br>
+				<?php
+					if(isset($_SESSION['organisation'])) {
+						if(!empty($_SESSION['organisation'])) {
+							echo '<span class="organisation"><b>'.strtoupper($_SESSION['organisation']).'</b></span>';
+						} else {
+							echo '<b><span class="yourName">' . strtoupper($_SESSION['firstName'] . ' ' . $_SESSION['lastName']) . '</span></b>';	
+						}
+					}
+				?>
+				<br>
 				Bank: <span class="yourBank"><?php echo isset($_SESSION['bankName']) ? strtoupper($_SESSION['bankName']) : '' ?></span><br>
 				A/C No.: <span span="yourAccountNumber"><?php echo isset($_SESSION['accountNumber']) ? strtoupper($_SESSION['accountNumber']) : '' ?></span><br>
 				IFSC Code: <span span="ifscCode"><?php echo isset($_SESSION['ifscCode']) ? strtoupper($_SESSION['ifscCode']) : '' ?></span><br>
 				Email- <span span="yourEmail"><?php echo isset($_SESSION['yourEmail']) ? $_SESSION['yourEmail'] : '' ?></span><br>
 				Contact No.: <span class="yourPhone"><?php echo isset($_SESSION['yourPhone']) ? $_SESSION['yourPhone'] : '' ?></span><br>
 				Pan Card No: <span class="yourPanCard"><?php echo isset($_SESSION['yourPanCard']) ? strtoupper($_SESSION['yourPanCard']) : '' ?></span>
+				<?php
+					if(isset($_SESSION['gstnumber'])) {
+						if(!empty($_SESSION['gstnumber'])) {
+							echo '<br>GST No: <span class="gstNumber">'. strtoupper($_SESSION['gstnumber']) . '</span>';
+						}
+					}
+					if(isset($_SESSION['website'])) {
+						if(!empty($_SESSION['website'])) {
+							echo '<br>'.$_SESSION['website'];
+						}
+					}
+				?>
 			</td>
 			<td>
 				<table class="allFullTr allHalfTd">
@@ -325,11 +407,11 @@ function dateFormatter($date) {
 					</tr>
 					<tr class="borderBottom">
 						<td><b>Balance Due (INR)</b></td>
-						<td class="align-right totalAmount">&#8377; <?php echo numberToCurrency($billingAmount); ?></td>
+						<td class="align-right totalAmount">&#8377; <?php echo numberToCurrency($finalAmount); ?></td>
 					</tr>
 					<tr class="borderBottom">
 						<td><b>Amount Enclosed</b></td>
-						<td class="align-right totalAmount">&#8377; <?php echo numberToCurrency($billingAmount); ?></td>
+						<td class="align-right totalAmount">&#8377; <?php echo numberToCurrency($finalAmount); ?></td>
 					</tr>
 				</table>
 			</td>
