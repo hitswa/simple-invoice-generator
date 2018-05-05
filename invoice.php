@@ -169,8 +169,8 @@ function dateFormatter($date) {
 		}
 		img {
 			height:auto;
-			/*height: 150px;*/
-			width:300px;
+			height: 150px;
+			/*width:300px;*/
 			float: right;
 		}
 		.fullWidth {
@@ -273,7 +273,7 @@ function dateFormatter($date) {
 			<table>
 				<tr class="fullWidth">
 					<td class="grayscale fullWidth tenPadding alignTop">
-						<b>Balance Due (INR) <span class="pull-right totalAmount">&#8377; <?php echo numberToCurrency($finalAmount); ?></span></b>
+						<b>Balance Due (INR) <span class="pull-right totalAmount"> <?php echo numberToCurrency($finalAmount); ?></span></b>
 					</td>
 				</tr>
 			</table>
@@ -343,7 +343,7 @@ function dateFormatter($date) {
 				</tr>
 				<tr class="grayscale tenPadding">
 					<td class="tenPadding"><b>Balance due (INR)</b></td>
-					<td class="tableRightValue totalAmount"><b>&#8377; <?php echo numberToCurrency($finalAmount); ?></b></td>
+					<td class="tableRightValue totalAmount"><b> <?php echo numberToCurrency($finalAmount); ?></b></td>
 				</tr>
 			</table>
 
@@ -407,11 +407,11 @@ function dateFormatter($date) {
 					</tr>
 					<tr class="borderBottom">
 						<td><b>Balance Due (INR)</b></td>
-						<td class="align-right totalAmount">&#8377; <?php echo numberToCurrency($finalAmount); ?></td>
+						<td class="align-right totalAmount"> <?php echo numberToCurrency($finalAmount); ?></td>
 					</tr>
 					<tr class="borderBottom">
 						<td><b>Amount Enclosed</b></td>
-						<td class="align-right totalAmount">&#8377; <?php echo numberToCurrency($finalAmount); ?></td>
+						<td class="align-right totalAmount"> <?php echo numberToCurrency($finalAmount); ?></td>
 					</tr>
 				</table>
 			</td>
